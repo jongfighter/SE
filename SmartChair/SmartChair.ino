@@ -1,70 +1,3 @@
-
-class Timer
-{
-  public:
-    bool isOn = false;
-    long endTime;
-    long curTime;
-    
-    Timer(long endTime_Second)
-    {
-      curTime = 0;
-      endTime = endTime_Second * 1000;
-    }
-
-    void setTime(long endTime_Second)
-    {
-      endTime=endTime_Second*1000;
-    }
-
-    void showTime()
-    {
-      Serial.println(curTime);
-    }
-    
-    bool isTimeEnd()
-    {
-      if (curTime >= endTime)
-        return true;
-      else
-        return false;
-    }
-
-   void reset()
-    {
-      curTime = 0;
-      on();
-    }
-
-    void on()
-    {
-      isOn = true;
-      prevT=(long)millis();
-    }
-
-    void off()
-    {
-      isOn = false;
-    }
-
-   void timeCheck()
-    {
-      if (isOn)
-      {
-        curT = (long)millis();
-        deltaT = curT - prevT;
-        curTime += deltaT;
-        prevT = (long)millis();
-      }
-    }
-
-    private :
-    
-    long curT=0;
-    long prevT=0;
-    long deltaT=0;
-};
-
 #define NOTE_B0  31
 #define NOTE_C1  33
 #define NOTE_CS1 35
@@ -155,21 +88,22 @@ class Timer
 #define NOTE_D8  4699
 #define NOTE_DS8 4978
 
+#include "seatState.h"
+
 const int speakerOut = 9;
-const int vibeOut = 3;
+const int vibeOut=3;
 char incomingByte;  // incoming data
 bool isStarted = false;
 int DEBUG = 1;
-int temp = 0;
+int temp=0;
 
-
-bool isVibe = false;
+bool isVibe=false;
 
 long prev_time = 0;
 long current_time = 0;
 long delta_time = 0;
 long timer_started = 0;
-long timer_vibe = 0;
+long timer_vibe=0;
 long timeEnd = 5000;
 String rcvMsg;
 String rcvByte;
@@ -186,35 +120,38 @@ int tone_ = 0;
 int beat = 0;
 long duration  = 0;
 
-
+ 
 int melody[] = {  NOTE_C7, NOTE_D7, NOTE_E7, NOTE_F7, NOTE_G7, NOTE_A6, NOTE_B5, NOTE_C6 };
-int beats[]  = { 64, 64, 64, 64, 64, 64, 64, 64};
+int beats[]  = { 64,64,64,64,64,64,64,64};
 int MAX_COUNT = sizeof(melody) / 2; // Melody length, for looping.
 
-Timer* timer_sit;
-Timer* timer_leave;
-Timer* timer_posture;
-Timer* timer_rest;
+
+//chair_pose
+float fsr1, fsr2, fsr3, fsr4;
+
+//소리 켜고 끄기
+bool soundIsOn = false;
+
 
 void setup() {
-  timer_sit=new Timer(5);
-  timer_leave=new Timer(5);
-  timer_posture=new Timer(5);
-  timer_rest=new Timer(5);
-  
   if (DEBUG) {
     Serial.begin(9600); // initialization
   }
-
-  pinMode(vibeOut, OUTPUT);//吏꾨룞 �엯�젰
+  
+  pinMode(vibeOut, OUTPUT);//진동 입력
   pinMode(speakerOut, OUTPUT);
-  pinMode(A0, INPUT);//fsr1 �엯�젰
-  pinMode(A1, INPUT);//fsr2 �엯�젰
-  pinMode(A2, INPUT);
-  pinMode(A3, INPUT);
-  pinMode(13, OUTPUT);//13踰덉쑝濡� fsr1�쓽 �긽�깭 異쒕젰
-  pinMode(12, OUTPUT);//12踰덉쑝濡� fsr2�쓽 �긽�깭 異쒕젰
   Serial.println("Press 1 to LED ON or 0 to LED OFF...");
+
+  //chair_pose
+  pinMode(A0, INPUT);//fsr1 입력
+  pinMode(A1, INPUT);//fsr2 입력
+  pinMode(A2, INPUT);//fsr3 입력
+  pinMode(A3, INPUT);//fsr4 입력
+  
+  fsr1 = analogRead(A0);
+  fsr2 = analogRead(A1);
+  fsr3 = analogRead(A2);
+  fsr4 = analogRead(A3);
 }
 
 bool isOn(uint8_t pin_in)
@@ -252,21 +189,14 @@ void playTone() {
   }
 }
 
-//isOn, playTone �븿�닔 �궗�슜 媛��뒫
+//isOn, playTone 함수 사용 가능
 void loop() {
-
-timer_sit->timeCheck();
-timer_leave->timeCheck();
-timer_posture->timeCheck();
-timer_rest->timeCheck();
-
-  int num = digitalRead(vibeOut);
-  
+  int num= digitalRead(vibeOut);
   current_time = (long) millis();
   delta_time = current_time - prev_time;
 
   if (isStarted)
-    timer_sit->on();
+    timer_started += delta_time;
 
   if (Serial.available() > 0) {  // if the data came
     rcvMsg = Serial.readString(); // read byte
@@ -281,7 +211,7 @@ timer_rest->timeCheck();
     {
       String timeString = rcvMsg.substring(3);
       Serial.println(timeString);
-      timer_sit->setTime((long)atoi(timeString.c_str()));
+      timeEnd = (long)atoi(timeString.c_str()) * 1000;
       Serial.println("ACK");
     }
     if (rcvMsg[0] == '0') {
@@ -289,40 +219,51 @@ timer_rest->timeCheck();
     }
     if (rcvMsg[0] == 'D' && rcvMsg[1] == 'O') {
       isStarted = true;
-      timer_sit->reset();
-      timer_sit->on();
-      timer_sit->showTime();
+      timer_started = 0;
+      Serial.println(timer_started);
     }
 
     if (rcvMsg[0] == '2') {
-      timer_sit->showTime();
+      Serial.println(timer_started);
     }
   }
 
-  if (timer_sit->isTimeEnd()&& isStarted) {// ���씠癒멸� 吏��젙�븳 �떆媛꾩쓣 �꽆寃쇱쓣 �븣
-    isVibe = true;
+  if (timer_started > timeEnd && isStarted) {// 타이머가 지정한 시간을 넘겼을 때
+    isVibe=true;
     isStarted = false;
     Serial.println("LONG");
   }
 
-  if (isVibe)
+  if(isVibe)
   {
-    timer_vibe += delta_time;
-    if (timer_vibe < 3000)
-      digitalWrite(vibeOut, HIGH);
-    else if (timer_vibe < 6000)
-      digitalWrite(vibeOut, LOW);
+    timer_vibe+=delta_time;
+    if(timer_vibe<3000)
+    digitalWrite(vibeOut,HIGH);
+    else if(timer_vibe <6000)
+    digitalWrite(vibeOut,LOW);
     else
-      timer_vibe = 0;
+    timer_vibe=0;
   }
   else
   {
-    timer_vibe = 0;
+    timer_vibe=0;
+  }
+
+  switch(getPose()) {
+    case NO_SEAT: soundIsOn = false; break;
+    case FRONT_SIDED: soundIsOn = true; break;
+    case CROSS_LEG: soundIsOn = true; break;
+    case SLEEP: soundIsOn = true; break;
+    case LEFT_SIDED: soundIsOn = true; break;
+    case RIGHT_SIDED: soundIsOn = true; break;
+    case GOOD: soundIsOn = false; break;
+    deafult: break;
   }
 
   prev_time = current_time;
 
   // Set up a counter to pull from melody[] and beats[]
+  if(soundIsOn)
   for (int i = 0; i < MAX_COUNT; i++) {
     playTone();
     tone_ = melody[i];
@@ -341,4 +282,3 @@ timer_rest->timeCheck();
     }*/
   }
 }
-
