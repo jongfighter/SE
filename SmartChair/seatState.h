@@ -1,0 +1,9 @@
+enum {
+  NO_SEAT,
+  FRONT_SIDED,
+  CROSS_LEG,
+  SLEEP,
+  LEFT_SIDED,
+  RIGHT_SIDED,
+  GOOD
+};

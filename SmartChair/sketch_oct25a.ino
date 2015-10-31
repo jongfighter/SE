@@ -1,15 +1,4 @@
-int timer_pose;
 extern float fsr1, fsr2, fsr2, fsr4;
-
-enum {
-  NO_SEAT,
-  FRONT_SIDED,
-  CROSS_LEG,
-  SLEEP,
-  LEFT_SIDED,
-  RIGHT_SIDED,
-  GOOD
-};
 
 bool seatState(uint8_t pin_in, float* fsr) {
   float result = analogRead(pin_in);
@@ -29,6 +18,7 @@ int getPose() {
   bool fsr2set = seatState(A1, &fsr2);
   bool fsr3set = seatState(A2, &fsr3);
   bool fsr4set = seatState(A3, &fsr4);
+
   //앉아있지 않다
   if(fsr1 < 5 && fsr2 < 5 && fsr3 < 5 && fsr4 < 5) {
     //Serial.println("There's no person.");

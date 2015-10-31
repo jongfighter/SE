@@ -88,6 +88,8 @@
 #define NOTE_D8  4699
 #define NOTE_DS8 4978
 
+#include "seatState.h"
+
 const int speakerOut = 9;
 const int vibeOut=3;
 char incomingByte;  // incoming data
@@ -126,6 +128,9 @@ int MAX_COUNT = sizeof(melody) / 2; // Melody length, for looping.
 
 //chair_pose
 float fsr1, fsr2, fsr3, fsr4;
+
+//소리 켜고 끄기
+bool soundIsOn = false;
 
 
 void setup() {
@@ -244,9 +249,21 @@ void loop() {
     timer_vibe=0;
   }
 
+  switch(getPose()) {
+    case NO_SEAT: soundIsOn = false; break;
+    case FRONT_SIDED: soundIsOn = true; break;
+    case CROSS_LEG: soundIsOn = true; break;
+    case SLEEP: soundIsOn = true; break;
+    case LEFT_SIDED: soundIsOn = true; break;
+    case RIGHT_SIDED: soundIsOn = true; break;
+    case GOOD: soundIsOn = false; break;
+    deafult: break;
+  }
+
   prev_time = current_time;
 
   // Set up a counter to pull from melody[] and beats[]
+  if(soundIsOn)
   for (int i = 0; i < MAX_COUNT; i++) {
     playTone();
     tone_ = melody[i];
