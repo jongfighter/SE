@@ -124,22 +124,29 @@ int beats[]  = { 64,64,64,64,64,64,64,64};
 int MAX_COUNT = sizeof(melody) / 2; // Melody length, for looping.
 
 
+//chair_pose
+float fsr1, fsr2, fsr3, fsr4;
+
 
 void setup() {
   if (DEBUG) {
     Serial.begin(9600); // initialization
   }
-
   
   pinMode(vibeOut, OUTPUT);//진동 입력
   pinMode(speakerOut, OUTPUT);
+  Serial.println("Press 1 to LED ON or 0 to LED OFF...");
+
+  //chair_pose
   pinMode(A0, INPUT);//fsr1 입력
   pinMode(A1, INPUT);//fsr2 입력
-  pinMode(A2, INPUT);
-  pinMode(A3, INPUT);
-  pinMode(13, OUTPUT);//13번으로 fsr1의 상태 출력
-  pinMode(12, OUTPUT);//12번으로 fsr2의 상태 출력
-  Serial.println("Press 1 to LED ON or 0 to LED OFF...");
+  pinMode(A2, INPUT);//fsr3 입력
+  pinMode(A3, INPUT);//fsr4 입력
+  
+  fsr1 = analogRead(A0);
+  fsr2 = analogRead(A1);
+  fsr3 = analogRead(A2);
+  fsr4 = analogRead(A3);
 }
 
 bool isOn(uint8_t pin_in)
