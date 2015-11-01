@@ -326,7 +326,6 @@ void loop() {
       timer_sit->showTime();
     }
   }
-<<<<<<< HEAD
   
   /* 앉아있을 시간이 지나지 않았는데 일어나면 알람이 울린다
   if (isSitting == false && timer_sit->isOn) {
@@ -364,24 +363,6 @@ void loop() {
     timer_rest->showTime();
     */
   }
-=======
-
-  if (timer_sit->isTimeEnd() && !isRestTime) {
-    isAlarm = true;
-    isRestTime = true;
-    timer_sit->reset();
-    timer_rest->on();
-    Serial.println("LONG");
-  }
-
-  if (timer_rest->isTimeEnd() && isRestTime)
-  {
-    isAlarm = false;
-    isRestTime = false;
-    timer_rest->reset();
-    timer_sit->on();
-  }
->>>>>>> 764ea4f9b270c864456cab66b251addc9130529a
 
   if (isAlarm)
   {
@@ -406,14 +387,9 @@ void loop() {
 
   switch (getPose()) {
     case NO_SEAT:
-<<<<<<< HEAD
       {
         isStarted = false;
         isSitting = false;
-=======
-      { 
-        isStarted = false;
->>>>>>> 764ea4f9b270c864456cab66b251addc9130529a
         soundIsOn = false;
         break;
       }
@@ -424,14 +400,10 @@ void loop() {
     case RIGHT_SIDED: soundIsOn = true; break;
     case GOOD:
       { 
-<<<<<<< HEAD
         if(isSitting == false) {
           isSitting = true;
           isStarted = true; 
         }
-=======
-        isStarted = true;
->>>>>>> 764ea4f9b270c864456cab66b251addc9130529a
         soundIsOn = false;
         break;
       }
