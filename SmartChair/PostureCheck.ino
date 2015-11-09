@@ -35,16 +35,16 @@ int getPose() {
     return CROSS_LEG;
   }
   //엎드려 잔다
-  else if(fsr3 > fsr1 || fsr4 > fsr2) {
+  else if(fsr3*0.9 > fsr1 || fsr4*0.9 > fsr2) {
     //Serial.println("Don't sleep..");
     return SLEEP;
   }
   //좌우 균형
-  else if(fsr1*0.8 > fsr2 || fsr3*0.8 > fsr4) {
+  else if(fsr1*0.7 > fsr2 || fsr3*0.7 > fsr4) {
     //Serial.println("Left sided.");
     return LEFT_SIDED;
   }
-  else if(fsr2*0.8 > fsr1 || fsr4*0.8 > fsr3) {
+  else if(fsr2*0.7 > fsr1 || fsr4*0.7 > fsr3) {
     //Serial.println("Right sided.");
     return RIGHT_SIDED;
   }

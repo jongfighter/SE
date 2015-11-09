@@ -208,12 +208,13 @@ Timer* timer_leave;
 Timer* timer_posture;
 Timer* timer_rest;
 Timer* timer_alarm;
+Timer* timer_vibeTerm;
 
 //chair_pose
 float fsr1, fsr2, fsr3, fsr4;
 
 //소리 켜고 끄기
-bool soundIsOn = false;
+bool vibeIsOn = false;
 
 
 
@@ -224,6 +225,7 @@ void setup() {
   timer_posture = new Timer((long)5);
   timer_rest = new Timer((long)5);
   timer_alarm = new Timer(0.0014f);
+  timer_vibeTerm = new Timer((long)3);
 
   if (DEBUG) {
     Serial.begin(9600); // initialization
@@ -288,6 +290,7 @@ void loop() {
   timer_leave->timeCheck();
   timer_posture->timeCheck();
   timer_rest->timeCheck();
+  timer_vibeTerm->timeCheck();
   int num = digitalRead(vibeOut);
   current_time = (long) millis();
   delta_time = current_time - prev_time;
@@ -390,33 +393,38 @@ void loop() {
       {
         isStarted = false;
         isSitting = false;
-        soundIsOn = false;
+        vibeIsOn = false;
+        timer_vibeTerm->reset();
         break;
       }
-    case FRONT_SIDED: soundIsOn = true; break;
-    case CROSS_LEG: soundIsOn = true; break;
-    case SLEEP: soundIsOn = true; break;
-    case LEFT_SIDED: soundIsOn = true; break;
-    case RIGHT_SIDED: soundIsOn = true; break;
+    case FRONT_SIDED: vibeIsOn = true; break;
+    case CROSS_LEG: vibeIsOn = true; break;
+    case SLEEP: vibeIsOn = true; break;
+    case LEFT_SIDED: vibeIsOn = true; break;
+    case RIGHT_SIDED: vibeIsOn = true; break;
     case GOOD:
       { 
         if(isSitting == false) {
           isSitting = true;
           isStarted = true; 
         }
-        soundIsOn = false;
+        vibeIsOn = false;
         break;
       }
-deafult: break;
+    deafult: break;
+  }
+
+  if (vibeIsOn && timer_vibeTerm->isOn == false) {
+    timer_vibeTerm->on();
+  }
+  if (timer_vibeTerm->isTimeEnd() && vibeIsOn)
+    digitalWrite(vibeOut, HIGH);
+  else if (vibeIsOn == false) {
+    digitalWrite(vibeOut, LOW);
   }
 
   prev_time = current_time;
-
   // Set up a counter to pull from melody[] and beats[]
-  if (soundIsOn)
-    digitalWrite(vibeOut, HIGH);
-  else
-    digitalWrite(vibeOut, LOW);
   /*
   for (int i = 0; i < MAX_COUNT; i++) {
     playTone();
