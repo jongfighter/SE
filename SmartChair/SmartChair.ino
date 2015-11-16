@@ -20,7 +20,7 @@ class Timer
 
     void setTime(long endTime_Second)
     {
-      endTime = endTime_Second * 1000;
+      endTime = endTime_Second * 60*1000;
     }
 
     void showTime()
@@ -215,6 +215,8 @@ float fsr1, fsr2, fsr3, fsr4;
 //소리 켜고 끄기
 bool soundIsOn = false;
 
+int myPin=0000;
+
 
 
 void setup() {
@@ -308,6 +310,16 @@ void loop() {
         Serial.println(rcvMsg);
       */
 
+    if(rcvMsg[0]=='P'&& rcvMsg[1] == 'I' && rcvMsg[2]=='N')
+    {
+      String rcvPin_str= rcvMsg.substring(3);
+      int rcvPin=atoi(rcvPin_str.c_str());
+      if(rcvPin==myPin)
+      Serial.println("LOGIN");
+      else
+      Serial.println("DENY");
+    }
+    
     if (rcvMsg[0] == 'S' && rcvMsg[1] == 'E' && rcvMsg[2] == 'T')
     {
       String timeString = rcvMsg.substring(3);
