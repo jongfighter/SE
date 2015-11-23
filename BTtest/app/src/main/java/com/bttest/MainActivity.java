@@ -3,7 +3,6 @@ package com.bttest;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.reflect.Method;
 import java.util.UUID;
 
 import android.app.Activity;
@@ -13,7 +12,6 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -23,21 +21,18 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 public class MainActivity extends Activity {
     private static final String TAG = "bluetooth2";
 
-    Button btnOn, btnStart;
-    EditText time;
-    TextView txtArduino;
-    Handler h;
+    private Button btnSet;
+    private Button btnPin;
+    private TextView txtArduino;
+    Handler h;      //handler for receiving message from the arduino
 
-    private boolean isOnSetting = false;
-
-    final int RECIEVE_MESSAGE = 1;        // Status  for Handler
+    final int RECEIVE_MESSAGE = 1;        // Status  for Handler
     private BluetoothAdapter btAdapter = null;
     private BluetoothSocket btSocket = null;
     private StringBuilder sb = new StringBuilder();
@@ -48,7 +43,7 @@ public class MainActivity extends Activity {
     private static final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
     // MAC-address of Bluetooth module (you must edit this line)
-    private static String address = "98:D3:31:70:26:1F";
+    private static String address = "98:D3:31:70:26:1F";            //MAC address of bluetooth module
 
     /** Called when the activity is first created. */
     @Override
@@ -57,15 +52,15 @@ public class MainActivity extends Activity {
 
         setContentView(R.layout.activity_main);
 
-        btnOn = (Button) findViewById(R.id.sendButton);                  // button LED ON
-        btnStart = (Button) findViewById(R.id.startButton);
+        btnSet = (Button) findViewById(R.id.setButton);                  // button for time setting
+        btnSet.setEnabled(false);
+        btnPin = (Button) findViewById(R.id.pinButton);
         txtArduino = (TextView) findViewById(R.id.txtArduino);      // for display the received data from the Arduino
-        time = (EditText) findViewById(R.id.time);
 
         h = new Handler() {
             public void handleMessage(android.os.Message msg) {
                 switch (msg.what) {
-                    case RECIEVE_MESSAGE:                                                   // if receive massage
+                    case RECEIVE_MESSAGE:                                                   // if receive massage
                         byte[] readBuf = (byte[]) msg.obj;
                         String strIncom = new String(readBuf, 0, msg.arg1);                 // create string from bytes array
                         sb.append(strIncom);                                                // append string
@@ -75,38 +70,37 @@ public class MainActivity extends Activity {
                             sb.delete(0, sb.length());                                      // and clear
                             txtArduino.setText("Arduino said : " + sbprint);            // update TextView
                             if (sbprint.equals("LONG")) {
-                                wakeUp();
+                                getUp();                           //if the arduino said LONG, then wakeup()
                             }
-                            else if (sbprint.equals("ACK")){
-                                isOnSetting = false;
+                            else if (sbprint.equals("LOGIN")){
+                                btnSet.setEnabled(true);
+                            }
+                            else if (sbprint.equals("DENY")){
+                                dialogWrong();
                             }
                         }
-                        Log.d(TAG, "...String:"+ sb.toString() +  "Byte:" + msg.arg1 + "...");
                         break;
                 }
             };
         };
 
         btAdapter = BluetoothAdapter.getDefaultAdapter();       // get Bluetooth adapter
-        checkBTState();
+        checkBTState();         //check bluetooth on
 
-        btnOn.setOnClickListener(new OnClickListener() {
+        btnSet.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
-                //btnOn.setEnabled(false);
-                mConnectedThread.write("SET" + time.getText().toString());
-                isOnSetting = true;
-                //Toast.makeText(getBaseContext(), "Turn on LED", Toast.LENGTH_SHORT).show();
-            }
-        });
-        btnStart.setOnClickListener(new OnClickListener() {
-            public void onClick(View v) {
-
-                mConnectedThread.write("DO");
+                dialogSetting();
             }
         });
 
+        btnPin.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialogPin();
+            }
+        });
     }
-
+/*
     private BluetoothSocket createBluetoothSocket(BluetoothDevice device) throws IOException {
         if(Build.VERSION.SDK_INT >= 10){
             try {
@@ -118,12 +112,10 @@ public class MainActivity extends Activity {
         }
         return  device.createRfcommSocketToServiceRecord(MY_UUID);
     }
-
+*/
     @Override
     public void onResume() {
         super.onResume();
-
-        Log.d(TAG, "...onResume - try connect...");
 
         // Set up a pointer to the remote node using it's address.
         BluetoothDevice device = btAdapter.getRemoteDevice(address);
@@ -144,10 +136,8 @@ public class MainActivity extends Activity {
         btAdapter.cancelDiscovery();
 
         // Establish the connection.  This will block until it connects.
-        Log.d(TAG, "...Connecting...");
         try {
             btSocket.connect();
-            Log.d(TAG, "....Connection ok...");
         } catch (IOException e) {
             try {
                 btSocket.close();
@@ -157,7 +147,6 @@ public class MainActivity extends Activity {
         }
 
         // Create a data stream so we can talk to server.
-        Log.d(TAG, "...Create Socket...");
 
         mConnectedThread = new ConnectedThread(btSocket);
         mConnectedThread.start();
@@ -166,8 +155,6 @@ public class MainActivity extends Activity {
     @Override
     public void onPause() {
         super.onPause();
-
-        Log.d(TAG, "...In onPause()...");
 
         try     {
             btSocket.close();
@@ -225,7 +212,7 @@ public class MainActivity extends Activity {
                 try {
                     // Read from the InputStream
                     bytes = mmInStream.read(buffer);        // Get number of bytes and message in "buffer"
-                    h.obtainMessage(RECIEVE_MESSAGE, bytes, -1, buffer).sendToTarget();     // Send to message queue Handler
+                    h.obtainMessage(RECEIVE_MESSAGE, bytes, -1, buffer).sendToTarget();     // Send to message queue Handler
                 } catch (IOException e) {
                     break;
                 }
@@ -246,10 +233,12 @@ public class MainActivity extends Activity {
 
     @Override
     public void onBackPressed() {
-        wakeUp();
+        //for test
+        btnSet.setEnabled(true);
     }
 
-    public void wakeUp() {
+    public void getUp() {
+        //when time passed too long, show dialog
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
         final LayoutInflater inflater =
@@ -257,16 +246,67 @@ public class MainActivity extends Activity {
         final View Viewlayout = inflater.inflate(R.layout.dialog_wakeup,
                 (ViewGroup) findViewById(R.id.layout_wakeup_dialog));
 
-        final TextView tv = (TextView) Viewlayout.findViewById(R.id.tv);
-        final ImageView iv= (ImageView) Viewlayout.findViewById(R.id.iv);
+        builder.setTitle("Get Up").setView(Viewlayout)
+                .setPositiveButton("OK", null)
+                .create()
+                .show();
+    }
 
-        builder.setTitle("Wake Up").setView(Viewlayout);
-        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+
+    public void dialogPin() {
+        //Pincode is needed to change time option
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+        final LayoutInflater inflater =
+                (LayoutInflater) this.getSystemService(LAYOUT_INFLATER_SERVICE);
+        final View Viewlayout = inflater.inflate(R.layout.dialog_pin,
+                (ViewGroup) findViewById(R.id.layout_pin_dialog));
+
+        final EditText pinInput = (EditText) Viewlayout.findViewById(R.id.pin);
+
+        builder.setTitle("Enter Pincode").setView(Viewlayout)
+                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                mConnectedThread.write("OK");
+                mConnectedThread.write("PIN" + pinInput.getText().toString());
             }
-        });
-        builder.create().show();
+        })
+                .setNegativeButton("Cancel", null)
+                .create()
+                .show();
+    }
+
+    public void dialogSetting() {
+        //send time information
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+        final LayoutInflater inflater =
+                (LayoutInflater) this.getSystemService(LAYOUT_INFLATER_SERVICE);
+        final View Viewlayout = inflater.inflate(R.layout.dialog_setting,
+                (ViewGroup) findViewById(R.id.layout_setting_dialog));
+
+        final EditText time = (EditText) Viewlayout.findViewById(R.id.time);
+
+        builder.setTitle("Time Setting").setView(Viewlayout)
+                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                        mConnectedThread.write("SET" + time.getText().toString());      //ex: SET10
+                    }
+                })
+                .setNegativeButton("Cancel", null)
+                .create()
+                .show();
+    }
+
+
+    public void dialogWrong() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Wrong Pin-code")
+                .setMessage("Enter the right Pin-Code")
+                .setCancelable(true)
+                .setPositiveButton("OK", null)
+                .create()
+                .show();
     }
 }
