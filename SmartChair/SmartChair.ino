@@ -1,3 +1,4 @@
+#include <avr/sleep.h>
 
 class Timer
 {
@@ -209,6 +210,7 @@ Timer* timer_posture;
 Timer* timer_rest;
 Timer* timer_alarm;
 Timer* timer_vibeTerm;
+Timer* timer_sleep;
 
 //chair_pose
 float fsr1, fsr2, fsr3, fsr4;
@@ -228,6 +230,7 @@ void setup() {
   timer_rest = new Timer((long)5);
   timer_alarm = new Timer(0.0014f);
   timer_vibeTerm = new Timer((long)3);
+  timer_sleep = new Timer((long)120);
 
   if (DEBUG) {
     Serial.begin(9600); // initialization
@@ -257,6 +260,9 @@ bool isOn(uint8_t pin_in)
   else return false;
 }
 
+void wakeUpNow() {
+  //JUST FOR WAKING UP ARDUINO!
+}
 
 // PLAY TONE  ==============================================
 // Pulse the speaker to play a tone for a particular duration
@@ -293,6 +299,8 @@ void loop() {
   timer_posture->timeCheck();
   timer_rest->timeCheck();
   timer_vibeTerm->timeCheck();
+  timer_sleep->timeCheck();
+  
   int num = digitalRead(vibeOut);
   current_time = (long) millis();
   delta_time = current_time - prev_time;
@@ -447,4 +455,19 @@ void loop() {
 
   }
   */
+
+  if(isSitting == false && timer_sleep->isOn == false)
+    timer_sleep->on();
+
+  if(timer_sleep->isTimeEnd()) {
+    set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+    sleep_enable();
+
+    attachInterrupt(0, wakeUpNow, HIGH);
+    sleep_mode();
+
+    sleep_disable();
+    detachInterrupt(0);
+  }
+  
 }
