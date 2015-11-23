@@ -19,37 +19,42 @@ int getPose() {
   bool fsr3set = seatState(A2, &fsr3);
   bool fsr4set = seatState(A3, &fsr4);
 
+  Serial.print(fsr1);Serial.print(" ");
+  Serial.println(fsr2);
+  Serial.print(fsr3);Serial.print(" "); 
+  Serial.println(fsr4);
+
   //앉아있지 않다
   if(fsr1 < 5 && fsr2 < 5 && fsr3 < 5 && fsr4 < 5) {
-    //Serial.println("There's no person.");
+    Serial.println("There's no person.");
     return NO_SEAT;
   }
   //앞쪽으로 치우쳐 앉는다
   else if(fsr1 < 50 || fsr2 < 50) {
-    //Serial.println("Put hip on the end of seat.");
+    Serial.println("Put hip on the end of seat.");
     return FRONT_SIDED;
   }
   //다리를 꼰다
   else if(fsr3 < 50 || fsr4 < 50) {
-    //Serial.println("Don't cross legs.");
+    Serial.println("Don't cross legs.");
     return CROSS_LEG;
   }
   //엎드려 잔다
   else if(fsr3*0.9 > fsr1 || fsr4*0.9 > fsr2) {
-    //Serial.println("Don't sleep..");
+    Serial.println("Don't sleep..");
     return SLEEP;
   }
   //좌우 균형
   else if(fsr1*0.7 > fsr2 || fsr3*0.7 > fsr4) {
-    //Serial.println("Left sided.");
+    Serial.println("Left sided.");
     return LEFT_SIDED;
   }
   else if(fsr2*0.7 > fsr1 || fsr4*0.7 > fsr3) {
-    //Serial.println("Right sided.");
+    Serial.println("Right sided.");
     return RIGHT_SIDED;
   }
   else {
-    //Serial.println("Seat proper state.");
+    Serial.println("Seat proper state.");
     return GOOD;
   }
 }
