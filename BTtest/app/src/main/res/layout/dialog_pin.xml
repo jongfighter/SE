@@ -15,7 +15,7 @@
         android:layout_height="wrap_content"
         android:inputType="numberPassword"
         android:numeric="integer"
-        android:hint="Enter your pincode"
+        android:hint="Enter your PIN-Code"
         android:id="@+id/pin"/>
 
 </LinearLayout>

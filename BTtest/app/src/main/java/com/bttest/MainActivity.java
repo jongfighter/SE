@@ -28,10 +28,9 @@ import android.widget.Toast;
 public class MainActivity extends Activity {
     private static final String TAG = "bluetooth2";
 
-    private Button btnSet;
-    private Button btnPin;
-    private Button btnPinset;
-    private TextView txtArduino;
+    private ImageButton btnSet;
+    private ImageButton btnPin;
+    private ImageButton btnPinset;
     Handler h;      //handler for receiving message from the arduino
     private int limitTime = 50;
 
@@ -55,12 +54,11 @@ public class MainActivity extends Activity {
 
         setContentView(R.layout.activity_main);
 
-        btnSet = (Button) findViewById(R.id.setButton);                  // button for time setting
+        btnSet = (ImageButton) findViewById(R.id.setButton);                  // button for time setting
         btnSet.setEnabled(false);
-        btnPinset = (Button) findViewById(R.id.pinsetButton);                  // button for PIN-CODE setting
+        btnPinset = (ImageButton) findViewById(R.id.pinsetButton);                  // button for PIN-CODE setting
         btnPinset.setEnabled(false);
-        btnPin = (Button) findViewById(R.id.pinButton);
-        txtArduino = (TextView) findViewById(R.id.txtArduino);      // for display the received data from the Arduino
+        btnPin = (ImageButton) findViewById(R.id.pinButton);
 
         h = new Handler() {
             public void handleMessage(android.os.Message msg) {
@@ -73,7 +71,6 @@ public class MainActivity extends Activity {
                         if (endOfLineIndex > 0) {                                            // if end-of-line,
                             String sbprint = sb.substring(0, endOfLineIndex);               // extract string
                             sb.delete(0, sb.length());                                      // and clear
-                            txtArduino.setText("Arduino said : " + sbprint);            // update TextView
                             if (sbprint.equals("LONG")) {
                                 getUp();                           //if the arduino said LONG, then wakeup()
                             }
@@ -83,6 +80,8 @@ public class MainActivity extends Activity {
                             else if (sbprint.length() > 4 && sbprint.substring(0, 5).equals("LOGIN")){
                                 btnSet.setEnabled(true);
                                 btnPinset.setEnabled(true);
+                                btnSet.setAlpha(0.8f);
+                                btnPinset.setAlpha(0.8f);
                                 limitTime = Integer.parseInt(sbprint.substring(5));
                             }
                         }
@@ -271,7 +270,7 @@ public class MainActivity extends Activity {
 
         final EditText pinInput = (EditText) Viewlayout.findViewById(R.id.pin);
 
-        builder.setTitle("Enter Pincode").setView(Viewlayout)
+        builder.setTitle("Enter PIN-Code").setView(Viewlayout)
                 .setPositiveButton("OK", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {

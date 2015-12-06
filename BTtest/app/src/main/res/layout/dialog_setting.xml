@@ -7,7 +7,7 @@
     android:orientation="vertical">
 
     <EditText
-        android:maxLength="4"
+        android:maxLength="3"
         android:layout_marginTop="10dp"
         android:layout_margin="20dp"
         android:layout_width="fill_parent"

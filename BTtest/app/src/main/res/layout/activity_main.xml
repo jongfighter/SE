@@ -6,44 +6,41 @@
     android:orientation="vertical"
     android:background="@drawable/background">
 
-    <Button
+    <ImageButton
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:src="@drawable/button3"
+        android:background="#0FFF"
         android:text="Login"
         android:id="@+id/pinButton"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="85dp"
-        android:alpha="0.7"/>
+        android:layout_marginTop="125dp"
+        android:alpha="0.8"/>
 
 
-    <Button
+    <ImageButton
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:src="@drawable/button1"
+        android:background="#0FFF"
         android:text="Setting"
         android:id="@+id/setButton"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="205dp"
-        android:alpha="0.7" />
+        android:layout_marginTop="245dp"
+        android:alpha="0.25" />
 
-    <Button
+    <ImageButton
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:src="@drawable/button2"
+        android:background="#0FFF"
         android:text="PIN-Code"
         android:id="@+id/pinsetButton"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="325dp"
-        android:alpha="0.7" />
-
-    <TextView
-        android:text="Message from arduino"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/txtArduino"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
+        android:layout_marginTop="365dp"
+        android:alpha="0.25" />
 
 </RelativeLayout>
