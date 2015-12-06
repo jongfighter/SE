@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/layout_pin_dialog"
+    android:id="@+id/layout_PINsetting_dialog"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:gravity="center"
@@ -9,13 +9,23 @@
 
     <EditText
         android:maxLength="4"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="20dp"
         android:layout_margin="20dp"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:inputType="numberPassword"
         android:numeric="integer"
-        android:hint="Enter your PIN-Code"
-        android:id="@+id/pin"/>
+        android:hint="New pincode"
+        android:id="@+id/pin1"/>
 
+    <EditText
+        android:maxLength="4"
+        android:layout_marginTop="20dp"
+        android:layout_margin="20dp"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:inputType="numberPassword"
+        android:numeric="integer"
+        android:hint="Confirm"
+        android:id="@+id/pin2"/>
 </LinearLayout>

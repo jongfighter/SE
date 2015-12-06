@@ -21,16 +21,18 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
 public class MainActivity extends Activity {
     private static final String TAG = "bluetooth2";
 
-    private Button btnSet;
-    private Button btnPin;
-    private TextView txtArduino;
+    private ImageButton btnSet;
+    private ImageButton btnPin;
+    private ImageButton btnPinset;
     Handler h;      //handler for receiving message from the arduino
+    private int limitTime = 50;
 
     final int RECEIVE_MESSAGE = 1;        // Status  for Handler
     private BluetoothAdapter btAdapter = null;
@@ -52,10 +54,11 @@ public class MainActivity extends Activity {
 
         setContentView(R.layout.activity_main);
 
-        btnSet = (Button) findViewById(R.id.setButton);                  // button for time setting
+        btnSet = (ImageButton) findViewById(R.id.setButton);                  // button for time setting
         btnSet.setEnabled(false);
-        btnPin = (Button) findViewById(R.id.pinButton);
-        txtArduino = (TextView) findViewById(R.id.txtArduino);      // for display the received data from the Arduino
+        btnPinset = (ImageButton) findViewById(R.id.pinsetButton);                  // button for PIN-CODE setting
+        btnPinset.setEnabled(false);
+        btnPin = (ImageButton) findViewById(R.id.pinButton);
 
         h = new Handler() {
             public void handleMessage(android.os.Message msg) {
@@ -68,15 +71,18 @@ public class MainActivity extends Activity {
                         if (endOfLineIndex > 0) {                                            // if end-of-line,
                             String sbprint = sb.substring(0, endOfLineIndex);               // extract string
                             sb.delete(0, sb.length());                                      // and clear
-                            txtArduino.setText("Arduino said : " + sbprint);            // update TextView
                             if (sbprint.equals("LONG")) {
                                 getUp();                           //if the arduino said LONG, then wakeup()
                             }
-                            else if (sbprint.equals("LOGIN")){
-                                btnSet.setEnabled(true);
-                            }
                             else if (sbprint.equals("DENY")){
                                 dialogWrong();
+                            }
+                            else if (sbprint.length() > 4 && sbprint.substring(0, 5).equals("LOGIN")){
+                                btnSet.setEnabled(true);
+                                btnPinset.setEnabled(true);
+                                btnSet.setAlpha(0.8f);
+                                btnPinset.setAlpha(0.8f);
+                                limitTime = Integer.parseInt(sbprint.substring(5));
                             }
                         }
                         break;
@@ -90,6 +96,12 @@ public class MainActivity extends Activity {
         btnSet.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
                 dialogSetting();
+            }
+        });
+
+        btnPinset.setOnClickListener(new OnClickListener() {
+            public void onClick(View v) {
+                dialogPINSetting();
             }
         });
 
@@ -231,12 +243,6 @@ public class MainActivity extends Activity {
         }
     }
 
-    @Override
-    public void onBackPressed() {
-        //for test
-        btnSet.setEnabled(true);
-    }
-
     public void getUp() {
         //when time passed too long, show dialog
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -264,13 +270,42 @@ public class MainActivity extends Activity {
 
         final EditText pinInput = (EditText) Viewlayout.findViewById(R.id.pin);
 
-        builder.setTitle("Enter Pincode").setView(Viewlayout)
+        builder.setTitle("Enter PIN-Code").setView(Viewlayout)
                 .setPositiveButton("OK", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                mConnectedThread.write("PIN" + pinInput.getText().toString());
+                mConnectedThread.write("SIGN" + pinInput.getText().toString());
             }
         })
+                .setNegativeButton("Cancel", null)
+                .create()
+                .show();
+    }
+
+    public void dialogPINSetting() {
+        //send New PIN code
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+        final LayoutInflater inflater =
+                (LayoutInflater) this.getSystemService(LAYOUT_INFLATER_SERVICE);
+        final View Viewlayout = inflater.inflate(R.layout.dialog_pinsetting,
+                (ViewGroup) findViewById(R.id.layout_PINsetting_dialog));
+
+        final EditText pin1 = (EditText) Viewlayout.findViewById(R.id.pin1);
+        final EditText pin2 = (EditText) Viewlayout.findViewById(R.id.pin2);
+
+        builder.setTitle("PIN-Code Setting").setView(Viewlayout)
+                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                        if(pin1.getText().toString().length() != 4)     //Too short
+                            dialogWrong();
+                        if(pin1.getText().toString().equals(pin2.getText().toString()))     //good case
+                            mConnectedThread.write("PIN" + pin1.getText().toString());
+                        else
+                            dialogWrong();      //confirm unmatched
+                    }
+                })
                 .setNegativeButton("Cancel", null)
                 .create()
                 .show();
@@ -287,10 +322,12 @@ public class MainActivity extends Activity {
 
         final EditText time = (EditText) Viewlayout.findViewById(R.id.time);
 
+        time.setText("" + limitTime);
+
         builder.setTitle("Time Setting").setView(Viewlayout)
                 .setPositiveButton("OK", new DialogInterface.OnClickListener() {
                     @Override
-                        public void onClick(DialogInterface dialog, int which) {
+                    public void onClick(DialogInterface dialog, int which) {
                         mConnectedThread.write("SET" + time.getText().toString());      //ex: SET10
                     }
                 })
@@ -302,11 +339,18 @@ public class MainActivity extends Activity {
 
     public void dialogWrong() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Wrong Pin-code")
+        builder.setTitle("Pin-Code Error")
                 .setMessage("Enter the right Pin-Code")
                 .setCancelable(true)
                 .setPositiveButton("OK", null)
                 .create()
                 .show();
     }
+    /* for testing
+    @Override
+    public void onBackPressed() {
+        btnSet.setEnabled(true);
+        btnPinset.setEnabled(true);
+    }
+    */
 }
